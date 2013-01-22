@@ -38,6 +38,8 @@ body {
     position:absolute;
     left: 0px;
     top: 14px;
+    width: 100px;
+    height: 24px;
 }
 #info.collapsed {
     color: #AAA;

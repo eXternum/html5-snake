@@ -13,10 +13,10 @@ var Game = {
     assetsLoading: false,
     fps: 30,
     wait: 10,
-    
+    level: 2,
     mapSize: {
-        x: 20,
-        y: 20
+        x: 40,
+        y: 40
         },
     
     map: null,
@@ -25,7 +25,14 @@ var Game = {
     snake: {
         parts: null,
         length: 0,
-        direction: 'right'
+        maxLength: 0,
+        direction: 'right',
+        newDirection: 'right'
+    },
+    
+    apple: {
+    	x: 0,
+    	y: 0
     },
 // Methods
     Initialize: function (canvasElementId) {
@@ -51,18 +58,28 @@ var Game = {
             
             
             for (var j = 0; j < this.mapSize.x; ++j) {
-                if (i == 0 || j == 0 || i == this.mapSize.y - 1 || j == this.mapSize.x - 1)
+                if (i == 0 || j == 0 || i == this.mapSize.y - 1 || j == this.mapSize.x - 1) {
                     this.map[i][j] = -1;
-                else 
+                } else {
+                	this.map[i][j] = 0;
+                } 
+                
+                /*
                     this.map[i][j] = getRandomInt(-2,10);
+                    */
+	            if (this.map[i][j] >= 0)
+	            {
+	            	this.snake.maxLength++;
+	            }
             }
         }
-        this.map[getRandomInt(0,this.mapSize.y -1)][getRandomInt(0,this.mapSize.x -1)] = 100;
+        
+	    this.NewApple();
         console.log(this.map);
         
         
         
-        this.snake.parts = new Array(this.mapSize.x * this.mapSize.y);
+        this.snake.parts = new Array(this.snake.maxLength);
         this.snake.parts[0] = {
             x: this.mapSize.x / 2,
             y: this.mapSize.y / 2
@@ -84,16 +101,20 @@ var Game = {
         {
             switch (e.keyCode) {
                 case 37:
-                    self.snake.direction = 'left';
+                	if (self.snake.direction != 'right') 
+                    	self.snake.newDirection = 'left';
                     break;
                 case 38:
-                    self.snake.direction = 'up';
+                	if (self.snake.direction != 'down') 
+                    	self.snake.newDirection = 'up';
                     break;
                 case 39:
-                    self.snake.direction = 'right';
+                	if (self.snake.direction != 'left') 
+                    	self.snake.newDirection = 'right';
                     break;
                 case 40:
-                    self.snake.direction = 'down';
+                	if (self.snake.direction != 'up') 
+                    	self.snake.newDirection = 'down';
                     break;
             }
         });
@@ -108,6 +129,13 @@ var Game = {
         
     },
     
+    NewApple: function () {
+    	do {
+			        this.apple.x = getRandomInt(0,this.mapSize.y -2);
+			        this.apple.y = getRandomInt(0,this.mapSize.x -2);
+		} while (this.map[this.apple.y][this.apple.x] < 0);
+    },
+    
     Draw: function () {
         this.context.fillStyle = "black";
         this.context.fillRect(0,0,800,600);
@@ -117,28 +145,31 @@ var Game = {
                 if (this.map[i][j] < 0)
                     this.context.fillStyle = "grey";
                 else
-                    this.context.fillStyle = "green";
+                    this.context.fillStyle = "darkgreen";
                 this.context.fillRect(j * tileSize, i * tileSize, tileSize, tileSize);
             }
         }
         
         for (i = 0; i < this.snake.length; ++i) {
             if (i === 0)
-                this.context.fillStyle = "darkred";
-            else if (i === 100)
-                this.context.fillStyle = "yellow";
+                this.context.fillStyle = "cyan";
             else
-                this.context.fillStyle = "brown";
+                this.context.fillStyle = "blue";
                 
             this.context.fillRect(this.snake.parts[i].x * tileSize + 2, this.snake.parts[i].y * tileSize + 2, tileSize - 4, tileSize - 4);
                 
         }
+        
+        
+        this.context.fillStyle = "red";
+        this.context.fillRect(this.apple.x * tileSize + 3, this.apple.y * tileSize + 3, tileSize - 6, tileSize - 6);
                 
     },
     Update: function () {
         this.wait--;
         if (this.wait < 0) {
-            this.wait = 10;
+            this.wait = this.level;
+            	this.snake.direction = this.snake.newDirection;
             // Check
             
             switch (this.snake.direction) {
@@ -180,6 +211,19 @@ var Game = {
                             break;
                     }
                 }
+            }
+            // Apple
+            if (this.snake.parts[0].x == this.apple.x && this.snake.parts[0].y == this.apple.y)
+            {
+            	if (this.snake.length < this.snake.maxLength)
+            	{
+            		this.snake.parts[this.snake.length] = {
+            			x: this.snake.parts[this.snake.length - 1].x,
+            			y: this.snake.parts[this.snake.length - 1].y
+            		};
+            		this.snake.length++;
+            	}  
+    			this.NewApple();
             }
         }
     }
